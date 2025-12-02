@@ -55,10 +55,10 @@ class CollabFilterOneVectorPerItem(AbstractBaseCollabFilterSGD):
         # TIP: use self.n_factors to access number of hidden dimensions
         self.param_dict = dict(
             mu=ag_np.ones(1),
-            b_per_user=ag_np.ones(1), # FIX dimensionality
-            c_per_item=ag_np.ones(1), # FIX dimensionality
-            U=0.001 * random_state.randn(1), # FIX dimensionality
-            V=0.001 * random_state.randn(1), # FIX dimensionality
+            b_per_user=ag_np.zeros(n_users), # FIX dimensionality
+            c_per_item=ag_np.zeros(n_items), # FIX dimensionality
+            U=0.001 * random_state.randn(n_users, self.n_factors), # FIX dimensionality
+            V=0.001 * random_state.randn(n_items, self.n_factors), # FIX dimensionality
             )
 
 
@@ -81,8 +81,15 @@ class CollabFilterOneVectorPerItem(AbstractBaseCollabFilterSGD):
             Entry n is for the n-th pair of user_id, item_id values provided.
         '''
         # TODO: Update with actual prediction logic
+        mu = self.param_dict['mu']
+        b = self.param_dict['b_per_user']
+        c = self.param_dict['c_per_item']
+        U = self.param_dict['U']
+        V = self.param_dict['V']
+
+
         N = user_id_N.size
-        yhat_N = ag_np.ones(N)
+        yhat_N = mu + b[user_id_N] + c[item_id_N] + ag_np.sum(U[user_id_N] * V[item_id_N], axis=1)
         return yhat_N
 
 
@@ -100,10 +107,22 @@ class CollabFilterOneVectorPerItem(AbstractBaseCollabFilterSGD):
         loss : float scalar
         '''
         # TODO compute loss
+        U = param_dict['U']
+        V = param_dict['V']
+    
+
+
         # TIP: use self.alpha to access regularization strength
         y_N = data_tuple[2]
         yhat_N = self.predict(data_tuple[0], data_tuple[1], **param_dict)
-        loss_total = 0.0
+        
+
+        mse_loss = ag_np.mean((yhat_N - y_N)**2)
+        
+        L2 = self.alpha * (ag_np.sum(U * U) + ag_np.sum(V * V))
+        
+        
+        loss_total = mse_loss + L2
         return loss_total    
 
 
