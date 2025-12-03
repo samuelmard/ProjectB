@@ -54,12 +54,12 @@ class CollabFilterOneVectorPerItem(AbstractBaseCollabFilterSGD):
         # TODO fix the lines below to have right dimensionality & values
         # TIP: use self.n_factors to access number of hidden dimensions
         self.param_dict = dict(
-            mu=ag_np.ones(1),
-            b_per_user=ag_np.zeros(n_users), # FIX dimensionality
-            c_per_item=ag_np.zeros(n_items), # FIX dimensionality
-            U=0.001 * random_state.randn(n_users, self.n_factors), # FIX dimensionality
-            V=0.001 * random_state.randn(n_items, self.n_factors), # FIX dimensionality
-            )
+        mu=ag_np.array([ag_np.mean(train_tuple[2])]),  # global mean rating
+        b_per_user=ag_np.zeros(n_users),               # user bias
+        c_per_item=ag_np.zeros(n_items),               # item bias
+        U=0.01 * random_state.randn(n_users, self.n_factors),
+        V=0.01 * random_state.randn(n_items, self.n_factors),
+        )
 
 
     def predict(self, user_id_N, item_id_N,
@@ -118,12 +118,11 @@ class CollabFilterOneVectorPerItem(AbstractBaseCollabFilterSGD):
         
 
         mse_loss = ag_np.mean((yhat_N - y_N)**2)
-        
+        rmse_loss = ag_np.sqrt(mse_loss)
+
         L2 = self.alpha * (ag_np.sum(U * U) + ag_np.sum(V * V))
-        
-        
-        loss_total = mse_loss + L2
-        return loss_total    
+
+        return rmse_loss + L2   
 
 
 if __name__ == '__main__':
