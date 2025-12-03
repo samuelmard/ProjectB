@@ -82,16 +82,16 @@ class CollabFilterOneVectorPerItem(AbstractBaseCollabFilterSGD):
         ''' 
 
         # TODO: Update with actual prediction logic
-        if mu==None:
-            mu = self.param_dict('mu')
-        if b_per_user==None: 
-            b_per_user = self.param_dict('b_per_user')
-        if c_per_item==None: 
-            c_per_item = self.param_dict('c_per_item')
-        if U==None: 
-            U = self.param_dict('U')
-        if V==None: 
-            V = self.param_dict('V')
+        if mu is None:
+            mu = self.param_dict['mu']
+        if b_per_user is None: 
+            b_per_user = self.param_dict['b_per_user']
+        if c_per_item is None: 
+            c_per_item = self.param_dict['c_per_item']
+        if U is None: 
+            U = self.param_dict['U']
+        if V is None: 
+            V = self.param_dict['V']
 
         N = user_id_N.size
         yhat_N = mu + b_per_user[user_id_N] + c_per_item[item_id_N] + ag_np.sum(U[user_id_N] * V[item_id_N], axis=1)
