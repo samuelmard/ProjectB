@@ -81,15 +81,9 @@ class CollabFilterOneVectorPerItem(AbstractBaseCollabFilterSGD):
             Entry n is for the n-th pair of user_id, item_id values provided.
         '''
         # TODO: Update with actual prediction logic
-        mu = self.param_dict['mu']
-        b = self.param_dict['b_per_user']
-        c = self.param_dict['c_per_item']
-        U = self.param_dict['U']
-        V = self.param_dict['V']
-
 
         N = user_id_N.size
-        yhat_N = mu + b[user_id_N] + c[item_id_N] + ag_np.sum(U[user_id_N] * V[item_id_N], axis=1)
+        yhat_N = mu + b_per_user[user_id_N] + c_per_item[item_id_N] + ag_np.sum(U[user_id_N] * V[item_id_N], axis=1)
         return yhat_N
 
 
@@ -118,11 +112,10 @@ class CollabFilterOneVectorPerItem(AbstractBaseCollabFilterSGD):
         
 
         mse_loss = ag_np.mean((yhat_N - y_N)**2)
-        rmse_loss = ag_np.sqrt(mse_loss)
 
         L2 = self.alpha * (ag_np.sum(U * U) + ag_np.sum(V * V))
 
-        return rmse_loss + L2   
+        return mse_loss + L2   
 
 
 if __name__ == '__main__':
