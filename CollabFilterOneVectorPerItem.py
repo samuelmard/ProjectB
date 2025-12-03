@@ -64,22 +64,13 @@ class CollabFilterOneVectorPerItem(AbstractBaseCollabFilterSGD):
 
     def predict(self, user_id_N, item_id_N,
                 mu=None, b_per_user=None, c_per_item=None, U=None, V=None):
-        ''' Predict ratings at specific user_id, item_id pairs
-
-        Args
-        ----
-        user_id_N : 1D array, size n_examples
-            Specific user_id values to use to make predictions
-        item_id_N : 1D array, size n_examples
-            Specific item_id values to use to make predictions
-            Each entry is paired with the corresponding entry of user_id_N
-
-        Returns
-        -------
-        yhat_N : 1D array, size n_examples
-            Scalar predicted ratings, one per provided example.
-            Entry n is for the n-th pair of user_id, item_id values provided.
+        ''' Predict ratings at specific user_id, item_id pairs 
+        ... (arguments are guaranteed to be passed by AbstractBaseCollabFilterSGD)
         ''' 
+        
+        # 1. Cast IDs to integer type for Autograd-safe indexing
+        user_id_N = user_id_N.astype(int)
+        item_id_N = item_id_N.astype(int)
 
         # TODO: Update with actual prediction logic
         if mu is None:
@@ -95,6 +86,21 @@ class CollabFilterOneVectorPerItem(AbstractBaseCollabFilterSGD):
 
         N = user_id_N.size
         yhat_N = mu + b_per_user[user_id_N] + c_per_item[item_id_N] + ag_np.sum(U[user_id_N] * V[item_id_N], axis=1)
+
+        # 2. Look up parameters safely using ag_np.take
+        mu_scalar = mu[0]
+        b_N = ag_np.take(b_per_user, user_id_N)
+        c_N = ag_np.take(c_per_item, item_id_N)
+        
+        U_N_F = ag_np.take(U, user_id_N, axis=0)
+        V_N_F = ag_np.take(V, item_id_N, axis=0)
+        
+        # 3. Compute the dot product using einsum
+        dot_product_N = ag_np.einsum('nf, nf -> n', U_N_F, V_N_F)
+        
+        # 4. Combine all terms
+        yhat_N = mu_scalar + b_N + c_N + dot_product_N
+        
         return yhat_N
 
 
