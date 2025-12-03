@@ -57,8 +57,8 @@ class CollabFilterOneVectorPerItem(AbstractBaseCollabFilterSGD):
         mu=ag_np.array([ag_np.mean(train_tuple[2])]),  # global mean rating
         b_per_user=ag_np.zeros(n_users),               # user bias
         c_per_item=ag_np.zeros(n_items),               # item bias
-        U=0.01 * random_state.randn(n_users, self.n_factors),
-        V=0.01 * random_state.randn(n_items, self.n_factors),
+        U= ag_np.array(0.01 * random_state.randn(n_users, self.n_factors)),
+        V= ag_np.array(0.01 * random_state.randn(n_items, self.n_factors)),
         )
 
 
@@ -79,22 +79,18 @@ class CollabFilterOneVectorPerItem(AbstractBaseCollabFilterSGD):
         yhat_N : 1D array, size n_examples
             Scalar predicted ratings, one per provided example.
             Entry n is for the n-th pair of user_id, item_id values provided.
-        ''' 
-
+        '''
         # TODO: Update with actual prediction logic
-        if mu is None:
-            mu = self.param_dict['mu']
-        if b_per_user is None: 
-            b_per_user = self.param_dict['b_per_user']
-        if c_per_item is None: 
-            c_per_item = self.param_dict['c_per_item']
-        if U is None: 
-            U = self.param_dict['U']
-        if V is None: 
-            V = self.param_dict['V']
+        # mu = self.param_dict['mu']
+        # b = self.param_dict['b_per_user']
+        # c = self.param_dict['c_per_item']
+        # U = self.param_dict['U']
+        # V = self.param_dict['V']
+
 
         N = user_id_N.size
-        yhat_N = mu + b_per_user[user_id_N] + c_per_item[item_id_N] + ag_np.sum(U[user_id_N] * V[item_id_N], axis=1)
+        # yhat_N = mu + b[user_id_N] + c[item_id_N] + ag_np.sum(U[user_id_N] * V[item_id_N], axis=1)
+        yhat_N = mu[0] + b_per_user[user_id_N] + c_per_item[item_id_N] + ag_np.sum(U[user_id_N,:] * V[item_id_N,:], axis=1)
         return yhat_N
 
 
@@ -112,20 +108,29 @@ class CollabFilterOneVectorPerItem(AbstractBaseCollabFilterSGD):
         loss : float scalar
         '''
         # TODO compute loss
+        user_id_N = data_tuple[0] 
+        item_id_N = data_tuple[1]
+
+
+        mu = param_dict['mu']
+        b_per_user = param_dict['b_per_user']
+        c_per_item = param_dict['c_per_item']
         U = param_dict['U']
         V = param_dict['V']
-    
+
 
 
         # TIP: use self.alpha to access regularization strength
         y_N = data_tuple[2]
-        yhat_N = self.predict(data_tuple[0], data_tuple[1], **param_dict)
-        
+        yhat_N = self.predict(user_id_N, item_id_N,
+                              mu, b_per_user, c_per_item, U, V)
 
-        mse_loss = ag_np.mean((yhat_N - y_N)**2)
+
+        mse_loss = ag_np.sum((yhat_N - y_N)**2)
 
         L2 = self.alpha * (ag_np.sum(U * U) + ag_np.sum(V * V))
 
+          
         return mse_loss + L2   
 
 
